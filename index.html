@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Конфигуратор ПК</title>
+    <style>
+        #error-log { color: red; display: none; margin-top: 20px; padding: 10px; border: 1px solid red; }
+    </style>
+</head>
+<body>
+    <h1>Сборка ПК</h1>
+    <select id="cpu"><option value="">Выбор CPU</option></select><br><br>
+    <select id="motherboard"><option value="">Выбор платы</option></select><br><br>
+    <select id="ram"><option value="">Выбор RAM</option></select>
+
+    <div id="error-log"></div>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
