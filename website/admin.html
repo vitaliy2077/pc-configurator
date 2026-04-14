@@ -1,0 +1,1022 @@
+<!DOCTYPE html> 
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel — PC Configurator</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;600;700&family=Onest:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<div class="login">
+  <div class="login-box">
+    <h2>Авторизация</h2>
+    <input type="text" class="loginadm" placeholder="Логин">
+    <input type="password" class="passadm" placeholder="Пароль">
+    <input type="button" value="Войти" onclick="login()">
+    <div class="error-toast">Неверный логин или пароль</div>
+  </div>
+</div>
+<div class="layout">
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo">PC<span>.CFG</span> <span class="badge">ADMIN</span></div>
+  </div>
+
+  <div class="sidebar-section">Обзор</div>
+  <div class="nav-item active" onclick="goTo('dashboard',this)"><span class="ico">📊</span>Дашборд</div>
+
+  <div class="sidebar-section">Комплектующие</div>
+  <div class="nav-item" onclick="goTo('cpu',this)"><span class="ico">🔲</span>Процессоры <span class="cnt" id="cnt-cpu">—</span></div>
+  <div class="nav-item" onclick="goTo('motherboard',this)"><span class="ico">🟦</span>Материнские платы <span class="cnt" id="cnt-mb">—</span></div>
+  <div class="nav-item" onclick="goTo('ram',this)"><span class="ico">📊</span>ОЗУ <span class="cnt" id="cnt-ram">—</span></div>
+  <div class="nav-item" onclick="goTo('gpu',this)"><span class="ico">🎮</span>Видеокарты <span class="cnt" id="cnt-gpu">—</span></div>
+  <div class="nav-item" onclick="goTo('storage',this)"><span class="ico">💾</span>Накопители <span class="cnt" id="cnt-storage">—</span></div>
+  <div class="nav-item" onclick="goTo('psu',this)"><span class="ico">⚡</span>Блоки питания <span class="cnt" id="cnt-psu">—</span></div>
+  <div class="nav-item" onclick="goTo('cooler',this)"><span class="ico">❄️</span>Охлаждение <span class="cnt" id="cnt-cooler">—</span></div>
+  <div class="nav-item" onclick="goTo('case',this)"><span class="ico">🖥️</span>Корпуса <span class="cnt" id="cnt-case">—</span></div>
+
+  <div class="sidebar-section">Справочники</div>
+  <div class="nav-item" onclick="goTo('refs',this)"><span class="ico">📝</span>Справочники</div>
+
+  <div class="sidebar-section">Сообщество</div>
+  <div class="nav-item" onclick="goTo('users',this)"><span class="ico">👥</span>Пользователи <span class="cnt" id="cnt-users">—</span></div>
+  <div class="nav-item" onclick="goTo('reviews',this)"><span class="ico">💬</span>Отзывы <span class="cnt" id="cnt-reviews">—</span></div>
+
+  <div class="sidebar-footer">
+    <a href="index.html">← Вернуться на сайт</a>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="topbar-title">Дашборд</div>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-badge">🔒 Admin</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="cards-row" id="dash-cards"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="tbl-wrap">
+          <div style="padding:16px 18px;border-bottom:1px solid var(--border)">
+            <div class="sec-title">По типам комплектующих</div>
+          </div>
+          <div id="dash-parts-breakdown" style="padding:8px 0"></div>
+        </div>
+        <div class="tbl-wrap">
+          <div style="padding:16px 18px;border-bottom:1px solid var(--border)">
+            <div class="sec-title">Последние отзывы</div>
+          </div>
+          <div id="dash-recent-reviews" style="padding:8px 0"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PARTS PAGES (cpu, motherboard, ram, gpu, storage, psu, cooler, case) -->
+    <div class="page" id="page-cpu"></div>
+    <div class="page" id="page-motherboard"></div>
+    <div class="page" id="page-ram"></div>
+    <div class="page" id="page-gpu"></div>
+    <div class="page" id="page-storage"></div>
+    <div class="page" id="page-psu"></div>
+    <div class="page" id="page-cooler"></div>
+    <div class="page" id="page-case"></div>
+
+    <!-- REFS -->
+    <div class="page" id="page-refs">
+      <div class="sec-hd"><div><div class="sec-title">Справочники</div><div class="sec-sub">Управление сокетами, типами памяти и форм-факторами</div></div></div>
+      <div class="ref-grid" id="refs-container"></div>
+    </div>
+
+    <!-- USERS -->
+    <div class="page" id="page-users">
+      <div class="sec-hd">
+        <div><div class="sec-title">Пользователи</div><div class="sec-sub">Зарегистрированные аккаунты</div></div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-toolbar">
+          <input class="tbl-search" id="users-search" placeholder="🔍  Поиск по имени или email..." oninput="renderUsersTable()">
+        </div>
+        <table>
+          <thead><tr><th>Пользователь</th><th>Email</th><th>Дата регистрации</th><th>Сборок</th><th>Отзывов</th><th>Действия</th></tr></thead>
+          <tbody id="users-tbody"></tbody>
+        </table>
+        <div id="users-empty" class="empty-state" style="display:none"><div class="e-ico">👥</div><p>Пользователей нет</p></div>
+      </div>
+    </div>
+
+    <!-- REVIEWS -->
+    <div class="page" id="page-reviews">
+      <div class="sec-hd">
+        <div><div class="sec-title">Отзывы</div><div class="sec-sub">Все отзывы пользователей</div></div>
+      </div>
+      <div class="tbl-wrap">
+        <div class="tbl-toolbar">
+          <input class="tbl-search" id="reviews-search" placeholder="🔍  Поиск..." oninput="renderReviewsTable()">
+          <select class="filter-select" id="reviews-filter" onchange="renderReviewsTable()">
+            <option value="">Все рейтинги</option>
+            <option value="5">★★★★★ 5</option>
+            <option value="4">★★★★☆ 4</option>
+            <option value="3">★★★☆☆ 3</option>
+            <option value="2">★★☆☆☆ 2</option>
+            <option value="1">★☆☆☆☆ 1</option>
+          </select>
+        </div>
+        <table>
+          <thead><tr><th>Автор</th><th>Рейтинг</th><th>Текст</th><th>Сборка</th><th>Дата</th><th>Лайки</th><th>Действия</th></tr></thead>
+          <tbody id="reviews-tbody"></tbody>
+        </table>
+        <div id="reviews-empty" class="empty-state" style="display:none"><div class="e-ico">💬</div><p>Отзывов нет</p></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+</div>
+
+<!-- Part Modal -->
+<div class="overlay" id="overlay-part">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-hd">
+      <div class="modal-title" id="part-modal-title">Добавить комплектующее</div>
+      <button class="modal-x" onclick="closeModal('overlay-part')">✕</button>
+    </div>
+    <div id="part-modal-body"></div>
+    <div class="ferr" id="part-err"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('overlay-part')">Отмена</button>
+      <button class="btn btn-accent" id="part-save-btn" onclick="savePart()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="overlay" id="overlay-confirm">
+  <div class="modal dlg-modal">
+    <div class="dlg-icon" id="dlg-icon">🗑️</div>
+    <div class="dlg-title" id="dlg-title">Удалить?</div>
+    <div class="dlg-sub" id="dlg-sub">Это действие нельзя отменить</div>
+    <div class="dlg-actions">
+      <button class="btn btn-ghost" onclick="closeModal('overlay-confirm')">Отмена</button>
+      <button class="btn btn-red" id="dlg-ok">Удалить</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+'use strict';
+
+/* ── DB helpers ── */
+const DB = {
+  get(k,d){try{const v=localStorage.getItem('koren_'+k);return v?JSON.parse(v):d}catch{return d}},
+  set(k,v){localStorage.setItem('koren_'+k,JSON.stringify(v))},
+  uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)},
+};
+
+/* ── Default PARTS data (from original app.js) ── */
+const DEFAULT_PARTS = {
+  cpu:[
+    {id:'cpu1',name:'Intel Core i9-14900K',brand:'Intel',socket:'LGA1700',tdp:125,price:185000,tier:'high',cores:24,freq:'3.2 ГГц'},
+    {id:'cpu2',name:'Intel Core i9-13900K',brand:'Intel',socket:'LGA1700',tdp:125,price:165000,tier:'high',cores:24,freq:'3.0 ГГц'},
+    {id:'cpu3',name:'Intel Core i7-14700K',brand:'Intel',socket:'LGA1700',tdp:125,price:135000,tier:'high',cores:20,freq:'3.4 ГГц'},
+    {id:'cpu4',name:'Intel Core i7-13700K',brand:'Intel',socket:'LGA1700',tdp:125,price:115000,tier:'high',cores:16,freq:'3.4 ГГц'},
+    {id:'cpu5',name:'Intel Core i5-14600K',brand:'Intel',socket:'LGA1700',tdp:125,price:90000,tier:'mid',cores:14,freq:'3.5 ГГц'},
+    {id:'cpu6',name:'Intel Core i5-13600K',brand:'Intel',socket:'LGA1700',tdp:125,price:79000,tier:'mid',cores:14,freq:'3.5 ГГц'},
+    {id:'cpu7',name:'Intel Core i5-14400F',brand:'Intel',socket:'LGA1700',tdp:65,price:62000,tier:'mid',cores:10,freq:'2.5 ГГц'},
+    {id:'cpu8',name:'Intel Core i5-13400F',brand:'Intel',socket:'LGA1700',tdp:65,price:55000,tier:'mid',cores:10,freq:'2.5 ГГц'},
+    {id:'cpu9',name:'Intel Core i5-12400F',brand:'Intel',socket:'LGA1700',tdp:65,price:42000,tier:'mid',cores:6,freq:'2.5 ГГц'},
+    {id:'cpu10',name:'Intel Core i3-14100',brand:'Intel',socket:'LGA1700',tdp:60,price:34000,tier:'low',cores:4,freq:'3.5 ГГц'},
+    {id:'cpu11',name:'Intel Core i3-13100',brand:'Intel',socket:'LGA1700',tdp:60,price:30000,tier:'low',cores:4,freq:'3.4 ГГц'},
+    {id:'cpu12',name:'Intel Core i3-12100F',brand:'Intel',socket:'LGA1700',tdp:58,price:24000,tier:'low',cores:4,freq:'3.3 ГГц'},
+    {id:'cpu13',name:'Intel Pentium G7400',brand:'Intel',socket:'LGA1700',tdp:46,price:15000,tier:'low',cores:2,freq:'3.7 ГГц'},
+    {id:'cpu14',name:'AMD Ryzen 9 7950X',brand:'AMD',socket:'AM5',tdp:170,price:200000,tier:'high',cores:16,freq:'4.5 ГГц'},
+    {id:'cpu15',name:'AMD Ryzen 9 7900X',brand:'AMD',socket:'AM5',tdp:170,price:145000,tier:'high',cores:12,freq:'4.7 ГГц'},
+    {id:'cpu16',name:'AMD Ryzen 9 7900',brand:'AMD',socket:'AM5',tdp:65,price:120000,tier:'high',cores:12,freq:'3.7 ГГц'},
+    {id:'cpu17',name:'AMD Ryzen 7 7800X3D',brand:'AMD',socket:'AM5',tdp:120,price:130000,tier:'high',cores:8,freq:'4.5 ГГц'},
+    {id:'cpu18',name:'AMD Ryzen 7 7700X',brand:'AMD',socket:'AM5',tdp:105,price:100000,tier:'mid',cores:8,freq:'4.5 ГГц'},
+    {id:'cpu19',name:'AMD Ryzen 7 7700',brand:'AMD',socket:'AM5',tdp:65,price:88000,tier:'mid',cores:8,freq:'3.8 ГГц'},
+    {id:'cpu20',name:'AMD Ryzen 5 7600X',brand:'AMD',socket:'AM5',tdp:105,price:72000,tier:'mid',cores:6,freq:'4.7 ГГц'},
+    {id:'cpu21',name:'AMD Ryzen 5 7600',brand:'AMD',socket:'AM5',tdp:65,price:60000,tier:'mid',cores:6,freq:'3.8 ГГц'},
+    {id:'cpu22',name:'AMD Ryzen 7 5800X',brand:'AMD',socket:'AM4',tdp:105,price:72000,tier:'mid',cores:8,freq:'3.8 ГГц'},
+    {id:'cpu23',name:'AMD Ryzen 7 5700X',brand:'AMD',socket:'AM4',tdp:65,price:58000,tier:'mid',cores:8,freq:'3.4 ГГц'},
+    {id:'cpu24',name:'AMD Ryzen 5 5600X',brand:'AMD',socket:'AM4',tdp:65,price:50000,tier:'mid',cores:6,freq:'3.7 ГГц'},
+    {id:'cpu25',name:'AMD Ryzen 5 5600',brand:'AMD',socket:'AM4',tdp:65,price:42000,tier:'mid',cores:6,freq:'3.5 ГГц'},
+    {id:'cpu26',name:'AMD Ryzen 5 5500',brand:'AMD',socket:'AM4',tdp:65,price:30000,tier:'low',cores:6,freq:'3.6 ГГц'},
+    {id:'cpu27',name:'AMD Ryzen 5 4600G',brand:'AMD',socket:'AM4',tdp:65,price:26000,tier:'low',cores:6,freq:'3.7 ГГц'},
+    {id:'cpu28',name:'AMD Ryzen 3 4100',brand:'AMD',socket:'AM4',tdp:65,price:18000,tier:'low',cores:4,freq:'3.8 ГГц'},
+    {id:'cpu29',name:'AMD Athlon 3000G',brand:'AMD',socket:'AM4',tdp:35,price:12000,tier:'low',cores:2,freq:'3.5 ГГц'},
+  ],
+  motherboard:[
+    {id:'mb1',name:'ASUS ROG Maximus Z790 Hero',brand:'ASUS',socket:'LGA1700',memType:'DDR5',formFactor:'ATX',price:175000},
+    {id:'mb2',name:'MSI MEG Z790 ACE',brand:'MSI',socket:'LGA1700',memType:'DDR5',formFactor:'ATX',price:145000},
+    {id:'mb3',name:'Gigabyte Z790 AORUS Master',brand:'Gigabyte',socket:'LGA1700',memType:'DDR5',formFactor:'ATX',price:120000},
+    {id:'mb4',name:'MSI MAG Z790 Tomahawk',brand:'MSI',socket:'LGA1700',memType:'DDR5',formFactor:'ATX',price:90000},
+    {id:'mb5',name:'ASUS TUF Gaming Z790-Plus',brand:'ASUS',socket:'LGA1700',memType:'DDR5',formFactor:'ATX',price:80000},
+    {id:'mb6',name:'Gigabyte B760 AORUS Elite',brand:'Gigabyte',socket:'LGA1700',memType:'DDR5',formFactor:'ATX',price:60000},
+    {id:'mb7',name:'MSI PRO B760M-A DDR5',brand:'MSI',socket:'LGA1700',memType:'DDR5',formFactor:'mATX',price:42000},
+    {id:'mb8',name:'ASRock B760M Pro RS DDR4',brand:'ASRock',socket:'LGA1700',memType:'DDR4',formFactor:'mATX',price:38000},
+    {id:'mb9',name:'Gigabyte B760M DS3H DDR4',brand:'Gigabyte',socket:'LGA1700',memType:'DDR4',formFactor:'mATX',price:32000},
+    {id:'mb10',name:'MSI PRO H610M-G DDR4',brand:'MSI',socket:'LGA1700',memType:'DDR4',formFactor:'mATX',price:24000},
+    {id:'mb11',name:'Gigabyte H610M S2H DDR4',brand:'Gigabyte',socket:'LGA1700',memType:'DDR4',formFactor:'mATX',price:18000},
+    {id:'mb12',name:'ASUS ROG Crosshair X670E',brand:'ASUS',socket:'AM5',memType:'DDR5',formFactor:'ATX',price:185000},
+    {id:'mb13',name:'MSI MEG X670E ACE',brand:'MSI',socket:'AM5',memType:'DDR5',formFactor:'ATX',price:165000},
+    {id:'mb14',name:'Gigabyte B650 AORUS Elite',brand:'Gigabyte',socket:'AM5',memType:'DDR5',formFactor:'ATX',price:75000},
+    {id:'mb15',name:'MSI MAG B650 Tomahawk',brand:'MSI',socket:'AM5',memType:'DDR5',formFactor:'ATX',price:68000},
+    {id:'mb16',name:'ASUS TUF Gaming B650-Plus',brand:'ASUS',socket:'AM5',memType:'DDR5',formFactor:'ATX',price:58000},
+    {id:'mb17',name:'ASRock B650M Pro RS',brand:'ASRock',socket:'AM5',memType:'DDR5',formFactor:'mATX',price:44000},
+    {id:'mb18',name:'Gigabyte A620M DS3H',brand:'Gigabyte',socket:'AM5',memType:'DDR5',formFactor:'mATX',price:30000},
+    {id:'mb19',name:'ASUS ROG Strix X570-E',brand:'ASUS',socket:'AM4',memType:'DDR4',formFactor:'ATX',price:65000},
+    {id:'mb20',name:'MSI MAG X570S Tomahawk',brand:'MSI',socket:'AM4',memType:'DDR4',formFactor:'ATX',price:55000},
+    {id:'mb21',name:'Gigabyte B550 AORUS Pro',brand:'Gigabyte',socket:'AM4',memType:'DDR4',formFactor:'ATX',price:45000},
+    {id:'mb22',name:'ASUS TUF Gaming B550-Plus',brand:'ASUS',socket:'AM4',memType:'DDR4',formFactor:'ATX',price:38000},
+    {id:'mb23',name:'MSI B450 Tomahawk MAX',brand:'MSI',socket:'AM4',memType:'DDR4',formFactor:'ATX',price:30000},
+    {id:'mb24',name:'ASUS Prime B550M-A',brand:'ASUS',socket:'AM4',memType:'DDR4',formFactor:'mATX',price:26000},
+    {id:'mb25',name:'Gigabyte B450M DS3H',brand:'Gigabyte',socket:'AM4',memType:'DDR4',formFactor:'mATX',price:18000},
+    {id:'mb26',name:'ASRock A520M-HVS',brand:'ASRock',socket:'AM4',memType:'DDR4',formFactor:'mATX',price:12000},
+  ],
+  ram:[
+    {id:'ram1',name:'Corsair Dominator Platinum DDR5 64GB',brand:'Corsair',type:'DDR5',capacity:64,speed:5600,price:90000},
+    {id:'ram2',name:'G.Skill Trident Z5 RGB DDR5 32GB',brand:'G.Skill',type:'DDR5',capacity:32,speed:6000,price:55000},
+    {id:'ram3',name:'Kingston Fury Renegade DDR5 32GB',brand:'Kingston',type:'DDR5',capacity:32,speed:6000,price:50000},
+    {id:'ram4',name:'Crucial Pro DDR5 32GB',brand:'Crucial',type:'DDR5',capacity:32,speed:5600,price:38000},
+    {id:'ram5',name:'Kingston Fury Beast DDR5 16GB',brand:'Kingston',type:'DDR5',capacity:16,speed:5200,price:28000},
+    {id:'ram6',name:'Corsair Vengeance DDR5 16GB',brand:'Corsair',type:'DDR5',capacity:16,speed:4800,price:23000},
+    {id:'ram7',name:'TeamGroup Elite DDR5 16GB',brand:'TeamGroup',type:'DDR5',capacity:16,speed:4800,price:17000},
+    {id:'ram8',name:'Crucial DDR5 8GB',brand:'Crucial',type:'DDR5',capacity:8,speed:4800,price:10000},
+    {id:'ram9',name:'G.Skill Trident Z RGB DDR4 32GB',brand:'G.Skill',type:'DDR4',capacity:32,speed:3600,price:35000},
+    {id:'ram10',name:'Corsair Vengeance RGB DDR4 32GB',brand:'Corsair',type:'DDR4',capacity:32,speed:3600,price:30000},
+    {id:'ram11',name:'Kingston Fury Beast DDR4 32GB',brand:'Kingston',type:'DDR4',capacity:32,speed:3200,price:25000},
+    {id:'ram12',name:'G.Skill Ripjaws V DDR4 16GB',brand:'G.Skill',type:'DDR4',capacity:16,speed:3600,price:19000},
+    {id:'ram13',name:'Corsair Vengeance DDR4 16GB',brand:'Corsair',type:'DDR4',capacity:16,speed:3200,price:16000},
+    {id:'ram14',name:'Kingston Fury Beast DDR4 16GB',brand:'Kingston',type:'DDR4',capacity:16,speed:3200,price:14000},
+    {id:'ram15',name:'Crucial Ballistix DDR4 8GB',brand:'Crucial',type:'DDR4',capacity:8,speed:3200,price:9000},
+    {id:'ram16',name:'Kingston ValueRAM DDR4 8GB',brand:'Kingston',type:'DDR4',capacity:8,speed:2666,price:7000},
+    {id:'ram17',name:'Hynix Original DDR4 4GB',brand:'Hynix',type:'DDR4',capacity:4,speed:2400,price:4500},
+  ],
+  gpu:[
+    {id:'gpu1',name:'NVIDIA RTX 4090 24GB',brand:'NVIDIA',vram:24,tdp:450,price:540000,tier:'high'},
+    {id:'gpu2',name:'NVIDIA RTX 4080 Super 16GB',brand:'NVIDIA',vram:16,tdp:320,price:330000,tier:'high'},
+    {id:'gpu3',name:'NVIDIA RTX 4080 16GB',brand:'NVIDIA',vram:16,tdp:320,price:290000,tier:'high'},
+    {id:'gpu4',name:'NVIDIA RTX 4070 Ti Super',brand:'NVIDIA',vram:16,tdp:285,price:250000,tier:'high'},
+    {id:'gpu5',name:'NVIDIA RTX 4070 Ti',brand:'NVIDIA',vram:12,tdp:285,price:220000,tier:'high'},
+    {id:'gpu6',name:'NVIDIA RTX 4070 Super',brand:'NVIDIA',vram:12,tdp:220,price:185000,tier:'high'},
+    {id:'gpu7',name:'NVIDIA RTX 3080 10GB',brand:'NVIDIA',vram:10,tdp:320,price:155000,tier:'high'},
+    {id:'gpu8',name:'NVIDIA RTX 4070',brand:'NVIDIA',vram:12,tdp:200,price:145000,tier:'mid'},
+    {id:'gpu9',name:'NVIDIA RTX 4060 Ti 16GB',brand:'NVIDIA',vram:16,tdp:165,price:135000,tier:'mid'},
+    {id:'gpu10',name:'NVIDIA RTX 4060 Ti 8GB',brand:'NVIDIA',vram:8,tdp:165,price:115000,tier:'mid'},
+    {id:'gpu11',name:'NVIDIA RTX 3070',brand:'NVIDIA',vram:8,tdp:220,price:105000,tier:'mid'},
+    {id:'gpu12',name:'NVIDIA RTX 4060',brand:'NVIDIA',vram:8,tdp:115,price:98000,tier:'mid'},
+    {id:'gpu13',name:'NVIDIA RTX 3060 12GB',brand:'NVIDIA',vram:12,tdp:170,price:78000,tier:'mid'},
+    {id:'gpu14',name:'NVIDIA RTX 3060 Ti',brand:'NVIDIA',vram:8,tdp:200,price:90000,tier:'mid'},
+    {id:'gpu15',name:'NVIDIA GTX 1660 Super',brand:'NVIDIA',vram:6,tdp:125,price:48000,tier:'low'},
+    {id:'gpu16',name:'NVIDIA GTX 1650',brand:'NVIDIA',vram:4,tdp:75,price:32000,tier:'low'},
+    {id:'gpu17',name:'AMD RX 7900 XTX 24GB',brand:'AMD',vram:24,tdp:355,price:310000,tier:'high'},
+    {id:'gpu18',name:'AMD RX 7900 XT 20GB',brand:'AMD',vram:20,tdp:315,price:265000,tier:'high'},
+    {id:'gpu19',name:'AMD RX 7800 XT 16GB',brand:'AMD',vram:16,tdp:263,price:155000,tier:'mid'},
+    {id:'gpu20',name:'AMD RX 7700 XT 12GB',brand:'AMD',vram:12,tdp:245,price:115000,tier:'mid'},
+    {id:'gpu21',name:'AMD RX 6800 XT 16GB',brand:'AMD',vram:16,tdp:300,price:110000,tier:'mid'},
+    {id:'gpu22',name:'AMD RX 7600 8GB',brand:'AMD',vram:8,tdp:165,price:80000,tier:'mid'},
+    {id:'gpu23',name:'AMD RX 6700 XT 12GB',brand:'AMD',vram:12,tdp:230,price:75000,tier:'mid'},
+    {id:'gpu24',name:'AMD RX 6600 8GB',brand:'AMD',vram:8,tdp:132,price:58000,tier:'low'},
+    {id:'gpu25',name:'AMD RX 6500 XT 4GB',brand:'AMD',vram:4,tdp:107,price:36000,tier:'low'},
+    {id:'gpu26',name:'AMD RX 6400 4GB',brand:'AMD',vram:4,tdp:53,price:25000,tier:'low'},
+    {id:'gpu27',name:'Intel Arc A770 16GB',brand:'Intel',vram:16,tdp:225,price:72000,tier:'mid'},
+    {id:'gpu28',name:'Intel Arc A750 8GB',brand:'Intel',vram:8,tdp:225,price:55000,tier:'mid'},
+    {id:'gpu29',name:'Intel Arc A580 8GB',brand:'Intel',vram:8,tdp:185,price:42000,tier:'low'},
+  ],
+  storage:[
+    {id:'ssd1',name:'Samsung 990 Pro 2TB NVMe',brand:'Samsung',type:'NVMe',capacity:'2 ТБ',read:7450,price:58000},
+    {id:'ssd2',name:'Samsung 990 Pro 1TB NVMe',brand:'Samsung',type:'NVMe',capacity:'1 ТБ',read:7450,price:34000},
+    {id:'ssd3',name:'WD Black SN850X 2TB NVMe',brand:'WD',type:'NVMe',capacity:'2 ТБ',read:7300,price:52000},
+    {id:'ssd4',name:'WD Black SN850X 1TB NVMe',brand:'WD',type:'NVMe',capacity:'1 ТБ',read:7300,price:30000},
+    {id:'ssd5',name:'Seagate FireCuda 530 2TB NVMe',brand:'Seagate',type:'NVMe',capacity:'2 ТБ',read:7300,price:50000},
+    {id:'ssd6',name:'Kingston NV3 2TB NVMe',brand:'Kingston',type:'NVMe',capacity:'2 ТБ',read:6000,price:28000},
+    {id:'ssd7',name:'Kingston NV3 1TB NVMe',brand:'Kingston',type:'NVMe',capacity:'1 ТБ',read:6000,price:16000},
+    {id:'ssd8',name:'Crucial P3 Plus 1TB NVMe',brand:'Crucial',type:'NVMe',capacity:'1 ТБ',read:5000,price:14000},
+    {id:'ssd9',name:'Kingston NV2 500GB NVMe',brand:'Kingston',type:'NVMe',capacity:'500 ГБ',read:3500,price:9500},
+    {id:'ssd10',name:'Samsung 870 EVO 2TB SATA',brand:'Samsung',type:'SATA',capacity:'2 ТБ',read:560,price:42000},
+    {id:'ssd11',name:'Samsung 870 EVO 1TB SATA',brand:'Samsung',type:'SATA',capacity:'1 ТБ',read:560,price:24000},
+    {id:'ssd12',name:'Crucial MX500 1TB SATA',brand:'Crucial',type:'SATA',capacity:'1 ТБ',read:560,price:18000},
+    {id:'ssd13',name:'Kingston A400 480GB SATA',brand:'Kingston',type:'SATA',capacity:'480 ГБ',read:500,price:9000},
+    {id:'hdd1',name:'Seagate Barracuda 4TB HDD',brand:'Seagate',type:'HDD',capacity:'4 ТБ',read:210,price:22000},
+    {id:'hdd2',name:'Seagate Barracuda 2TB HDD',brand:'Seagate',type:'HDD',capacity:'2 ТБ',read:210,price:14000},
+    {id:'hdd3',name:'WD Blue 4TB HDD',brand:'WD',type:'HDD',capacity:'4 ТБ',read:180,price:24000},
+    {id:'hdd4',name:'WD Blue 1TB HDD',brand:'WD',type:'HDD',capacity:'1 ТБ',read:180,price:9000},
+    {id:'hdd5',name:'Toshiba P300 2TB HDD',brand:'Toshiba',type:'HDD',capacity:'2 ТБ',read:210,price:11000},
+  ],
+  psu:[
+    {id:'psu1',name:'Seasonic Prime TX-1000',brand:'Seasonic',wattage:1000,eff:'80+ Titanium',price:74000},
+    {id:'psu2',name:'Corsair RM1000x',brand:'Corsair',wattage:1000,eff:'80+ Gold',price:56000},
+    {id:'psu3',name:'be quiet! Straight Power 1000W',brand:'be quiet!',wattage:1000,eff:'80+ Platinum',price:62000},
+    {id:'psu4',name:'be quiet! Dark Power 850W',brand:'be quiet!',wattage:850,eff:'80+ Titanium',price:65000},
+    {id:'psu5',name:'Seasonic Focus GX-850',brand:'Seasonic',wattage:850,eff:'80+ Gold',price:48000},
+    {id:'psu6',name:'Corsair RM850x',brand:'Corsair',wattage:850,eff:'80+ Gold',price:45000},
+    {id:'psu7',name:'EVGA SuperNOVA 850 G6',brand:'EVGA',wattage:850,eff:'80+ Gold',price:42000},
+    {id:'psu8',name:'Seasonic Focus GX-750',brand:'Seasonic',wattage:750,eff:'80+ Gold',price:38000},
+    {id:'psu9',name:'Corsair RM750x',brand:'Corsair',wattage:750,eff:'80+ Gold',price:36000},
+    {id:'psu10',name:'EVGA SuperNOVA 750 G6',brand:'EVGA',wattage:750,eff:'80+ Gold',price:34000},
+    {id:'psu11',name:'be quiet! Pure Power 12 750W',brand:'be quiet!',wattage:750,eff:'80+ Gold',price:30000},
+    {id:'psu12',name:'Corsair CX750M',brand:'Corsair',wattage:650,eff:'80+ Bronze',price:24000},
+    {id:'psu13',name:'DeepCool PQ650M',brand:'DeepCool',wattage:650,eff:'80+ Gold',price:22000},
+    {id:'psu14',name:'Chieftec Polaris 650W',brand:'Chieftec',wattage:650,eff:'80+ Gold',price:18000},
+    {id:'psu15',name:'Cooler Master MWE 550W',brand:'Cooler Master',wattage:550,eff:'80+ Bronze',price:14500},
+    {id:'psu16',name:'be quiet! System Power 550W',brand:'be quiet!',wattage:550,eff:'80+ Bronze',price:13000},
+    {id:'psu17',name:'Chieftec Smart 550W',brand:'Chieftec',wattage:550,eff:'80+ Bronze',price:11000},
+    {id:'psu18',name:'Cooler Master Elite 450W',brand:'Cooler Master',wattage:450,eff:'80+ Bronze',price:9000},
+    {id:'psu19',name:'AeroCool VX Plus 400W',brand:'AeroCool',wattage:400,eff:'80+',price:6500},
+    {id:'psu20',name:'Thermaltake Litepower 350W',brand:'Thermaltake',wattage:350,eff:'80+',price:5000},
+  ],
+  cooler:[
+    {id:'cool1',name:'ARCTIC Liquid Freezer II 360',brand:'ARCTIC',type:'AIO',tdpSupport:300,sockets:['LGA1700','AM5','AM4'],price:35000},
+    {id:'cool2',name:'Corsair iCUE H150i Elite',brand:'Corsair',type:'AIO',tdpSupport:280,sockets:['LGA1700','AM5','AM4'],price:50000},
+    {id:'cool3',name:'NZXT Kraken Z73 360mm',brand:'NZXT',type:'AIO',tdpSupport:280,sockets:['LGA1700','AM5','AM4'],price:48000},
+    {id:'cool4',name:'ARCTIC Liquid Freezer II 240',brand:'ARCTIC',type:'AIO',tdpSupport:250,sockets:['LGA1700','AM5','AM4'],price:23000},
+    {id:'cool5',name:'Corsair iCUE H100i RGB',brand:'Corsair',type:'AIO',tdpSupport:250,sockets:['LGA1700','AM5','AM4'],price:32000},
+    {id:'cool6',name:'DeepCool LT520',brand:'DeepCool',type:'AIO',tdpSupport:250,sockets:['LGA1700','AM5','AM4'],price:19000},
+    {id:'cool7',name:'NZXT Kraken X63 280mm',brand:'NZXT',type:'AIO',tdpSupport:250,sockets:['LGA1700','AM5','AM4'],price:37000},
+    {id:'cool8',name:'Noctua NH-D15',brand:'Noctua',type:'Air',tdpSupport:250,sockets:['LGA1700','AM5','AM4'],price:31000},
+    {id:'cool9',name:'be quiet! Dark Rock Pro 4',brand:'be quiet!',type:'Air',tdpSupport:250,sockets:['LGA1700','AM5','AM4'],price:27000},
+    {id:'cool10',name:'Deepcool AK620',brand:'DeepCool',type:'Air',tdpSupport:260,sockets:['LGA1700','AM5','AM4'],price:18000},
+    {id:'cool11',name:'Thermalright Peerless Assassin',brand:'Thermalright',type:'Air',tdpSupport:260,sockets:['LGA1700','AM5','AM4'],price:14000},
+    {id:'cool12',name:'Noctua NH-U12S Redux',brand:'Noctua',type:'Air',tdpSupport:180,sockets:['LGA1700','AM5','AM4'],price:16000},
+    {id:'cool13',name:'DeepCool AG400',brand:'DeepCool',type:'Air',tdpSupport:220,sockets:['LGA1700','AM5','AM4'],price:10000},
+    {id:'cool14',name:'ID-Cooling SE-224-XT',brand:'ID-Cooling',type:'Air',tdpSupport:180,sockets:['LGA1700','AM5','AM4'],price:8000},
+    {id:'cool15',name:'Zalman CNPS10X Performa',brand:'Zalman',type:'Air',tdpSupport:180,sockets:['LGA1700','AM5','AM4'],price:7500},
+    {id:'cool16',name:'DeepCool Gammaxx 400',brand:'DeepCool',type:'Air',tdpSupport:130,sockets:['LGA1700','AM5','AM4'],price:5500},
+    {id:'cool17',name:'Cooler Master Hyper 212',brand:'Cooler Master',type:'Air',tdpSupport:150,sockets:['LGA1700','AM5','AM4'],price:6500},
+    {id:'cool18',name:'Thermalright True Spirit 90',brand:'Thermalright',type:'Air',tdpSupport:120,sockets:['LGA1700','AM5','AM4'],price:4000},
+  ],
+  case:[
+    {id:'case1',name:'Lian Li PC-O11 Dynamic EVO',brand:'Lian Li',formFactors:['ATX','mATX'],maxGpuLen:420,price:50000},
+    {id:'case2',name:'Fractal Design Torrent',brand:'Fractal',formFactors:['ATX','mATX'],maxGpuLen:461,price:45000},
+    {id:'case3',name:'Corsair 5000D Airflow',brand:'Corsair',formFactors:['ATX','mATX'],maxGpuLen:420,price:42000},
+    {id:'case4',name:'NZXT H7 Flow',brand:'NZXT',formFactors:['ATX','mATX'],maxGpuLen:400,price:36000},
+    {id:'case5',name:'be quiet! Pure Base 500DX',brand:'be quiet!',formFactors:['ATX','mATX'],maxGpuLen:369,price:30000},
+    {id:'case6',name:'Fractal Design Meshify 2',brand:'Fractal',formFactors:['ATX','mATX'],maxGpuLen:460,price:35000},
+    {id:'case7',name:'Deepcool CH510',brand:'DeepCool',formFactors:['ATX','mATX'],maxGpuLen:380,price:20000},
+    {id:'case8',name:'Antec P10 Flux',brand:'Antec',formFactors:['ATX','mATX'],maxGpuLen:370,price:24000},
+    {id:'case9',name:'Cooler Master MasterBox TD500',brand:'Cooler Master',formFactors:['ATX','mATX'],maxGpuLen:410,price:22000},
+    {id:'case10',name:'DeepCool Matrexx 55',brand:'DeepCool',formFactors:['ATX','mATX'],maxGpuLen:380,price:15000},
+    {id:'case11',name:'CM MasterBox Q300L',brand:'Cooler Master',formFactors:['mATX'],maxGpuLen:360,price:12000},
+    {id:'case12',name:'AeroCool Aero One Mini',brand:'AeroCool',formFactors:['mATX'],maxGpuLen:350,price:9000},
+    {id:'case13',name:'Zalman S3',brand:'Zalman',formFactors:['ATX','mATX'],maxGpuLen:340,price:7500},
+    {id:'case14',name:'Thermaltake Versa H15',brand:'Thermaltake',formFactors:['mATX'],maxGpuLen:320,price:6000},
+  ],
+};
+
+/* ── Load PARTS from localStorage or defaults ── */
+function getPartsData(){
+  const stored = DB.get('parts_db', null);
+  if(stored) return stored;
+  DB.set('parts_db', DEFAULT_PARTS);
+  return DEFAULT_PARTS;
+}
+function savePartsData(data){ DB.set('parts_db', data); syncMainApp(); }
+
+/* Sync back to main app's PARTS key so configurator picks up changes */
+function syncMainApp(){
+  // The main app reads from global PARTS const — we store override in parts_db
+  // We also export to koren_parts_override so app.js can optionally read it
+  const data = getPartsData();
+  localStorage.setItem('koren_parts_override', JSON.stringify(data));
+}
+
+/* ── Refs ── */
+const DEFAULT_REFS = {
+  sockets: ['LGA1700','AM5','AM4','LGA1200','AM3+'],
+  memTypes: ['DDR5','DDR4','DDR3'],
+  formFactors: ['ATX','mATX','ITX','E-ATX'],
+  coolerTypes: ['AIO','Air'],
+  storageTypes: ['NVMe','SATA','HDD'],
+  effRatings: ['80+ Titanium','80+ Platinum','80+ Gold','80+ Silver','80+ Bronze','80+'],
+  tiers: ['high','mid','low'],
+};
+function getRefs(){ return DB.get('admin_refs', DEFAULT_REFS); }
+function saveRefs(refs){ DB.set('admin_refs', refs); }
+
+/* ── Navigation ── */
+let currentPage = 'dashboard';
+function goTo(page, el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page)?.classList.add('active');
+  if(el) el.classList.add('active');
+  currentPage = page;
+  const titles = {
+    dashboard:'Дашборд', cpu:'Процессоры', motherboard:'Материнские платы',
+    ram:'Оперативная память', gpu:'Видеокарты', storage:'Накопители',
+    psu:'Блоки питания', cooler:'Охлаждение', case:'Корпуса',
+    refs:'Справочники', users:'Пользователи', reviews:'Отзывы'
+  };
+  document.getElementById('topbar-title').textContent = titles[page] || page;
+  if(['cpu','motherboard','ram','gpu','storage','psu','cooler','case'].includes(page)) renderPartsPage(page);
+  if(page==='refs') renderRefs();
+  if(page==='users') renderUsersTable();
+  if(page==='reviews') renderReviewsTable();
+  if(page==='dashboard') renderDashboard();
+}
+
+/* ── Format ── */
+const fmt = n => n ? Number(n).toLocaleString('ru-KZ')+' ₸' : '—';
+
+/* ── Toast ── */
+function toast(msg,type='inf'){
+  const wrap=document.getElementById('toasts');
+  const icons={ok:'✓',err:'✕',inf:'ℹ'};
+  const el=document.createElement('div');
+  el.className=`toast toast-${type}`;
+  el.innerHTML=`<span>${icons[type]||'•'}</span><span>${msg}</span>`;
+  wrap.appendChild(el);
+  setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),300)},3000);
+}
+
+/* ── Modal ── */
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+/* ── Part schemas ── */
+const PART_SCHEMA = {
+  cpu:{
+    label:'Процессор',
+    fields:[
+      {k:'name',label:'Название',type:'text',req:true},
+      {k:'brand',label:'Бренд',type:'text',req:true},
+      {k:'socket',label:'Сокет',type:'select',ref:'sockets',req:true},
+      {k:'cores',label:'Ядра',type:'number',req:true},
+      {k:'freq',label:'Частота (напр. 3.2 ГГц)',type:'text',req:true},
+      {k:'tdp',label:'TDP (Вт)',type:'number',req:true},
+      {k:'tier',label:'Класс',type:'select',ref:'tiers',req:true},
+      {k:'price',label:'Цена (₸)',type:'number',req:true},
+    ],
+    cols:(p)=>[
+      p.name, p.brand,
+      `<span class="tag tag-socket">${p.socket}</span>`,
+      `${p.cores} ядер`,
+      p.freq,
+      `${p.tdp} Вт`,
+      tierTag(p.tier),
+      `<span class="td-price">${fmt(p.price)}</span>`,
+    ],
+    headers:['Название','Бренд','Сокет','Ядра','Частота','TDP','Класс','Цена'],
+  },
+  motherboard:{
+    label:'Материнская плата',
+    fields:[
+      {k:'name',label:'Название',type:'text',req:true},
+      {k:'brand',label:'Бренд',type:'text',req:true},
+      {k:'socket',label:'Сокет',type:'select',ref:'sockets',req:true},
+      {k:'memType',label:'Тип памяти',type:'select',ref:'memTypes',req:true},
+      {k:'formFactor',label:'Форм-фактор',type:'select',ref:'formFactors',req:true},
+      {k:'price',label:'Цена (₸)',type:'number',req:true},
+    ],
+    cols:(p)=>[
+      p.name, p.brand,
+      `<span class="tag tag-socket">${p.socket}</span>`,
+      memTag(p.memType),
+      `<span class="tag tag-socket">${p.formFactor}</span>`,
+      `<span class="td-price">${fmt(p.price)}</span>`,
+    ],
+    headers:['Название','Бренд','Сокет','Память','Форм-фактор','Цена'],
+  },
+  ram:{
+    label:'ОЗУ',
+    fields:[
+      {k:'name',label:'Название',type:'text',req:true},
+      {k:'brand',label:'Бренд',type:'text',req:true},
+      {k:'type',label:'Тип',type:'select',ref:'memTypes',req:true},
+      {k:'capacity',label:'Объём (ГБ)',type:'number',req:true},
+      {k:'speed',label:'Частота (МГц)',type:'number',req:true},
+      {k:'price',label:'Цена (₸)',type:'number',req:true},
+    ],
+    cols:(p)=>[
+      p.name, p.brand,
+      memTag(p.type),
+      `${p.capacity} ГБ`,
+      `${p.speed} МГц`,
+      `<span class="td-price">${fmt(p.price)}</span>`,
+    ],
+    headers:['Название','Бренд','Тип','Объём','Частота','Цена'],
+  },
+  gpu:{
+    label:'Видеокарта',
+    fields:[
+      {k:'name',label:'Название',type:'text',req:true},
+      {k:'brand',label:'Бренд',type:'text',req:true},
+      {k:'vram',label:'VRAM (ГБ)',type:'number',req:true},
+      {k:'tdp',label:'TDP (Вт)',type:'number',req:true},
+      {k:'tier',label:'Класс',type:'select',ref:'tiers',req:true},
+      {k:'price',label:'Цена (₸)',type:'number',req:true},
+    ],
+    cols:(p)=>[
+      p.name, p.brand,
+      `${p.vram} ГБ`,
+      `${p.tdp} Вт`,
+      tierTag(p.tier),
+      `<span class="td-price">${fmt(p.price)}</span>`,
+    ],
+    headers:['Название','Бренд','VRAM','TDP','Класс','Цена'],
+  },
+  storage:{
+    label:'Накопитель',
+    fields:[
+      {k:'name',label:'Название',type:'text',req:true},
+      {k:'brand',label:'Бренд',type:'text',req:true},
+      {k:'type',label:'Тип',type:'select',ref:'storageTypes',req:true},
+      {k:'capacity',label:'Объём (напр. 1 ТБ)',type:'text',req:true},
+      {k:'read',label:'Чтение (МБ/с)',type:'number',req:true},
+      {k:'price',label:'Цена (₸)',type:'number',req:true},
+    ],
+    cols:(p)=>[
+      p.name, p.brand,
+      storTag(p.type),
+      p.capacity,
+      `${p.read} МБ/с`,
+      `<span class="td-price">${fmt(p.price)}</span>`,
+    ],
+    headers:['Название','Бренд','Тип','Объём','Чтение','Цена'],
+  },
+  psu:{
+    label:'Блок питания',
+    fields:[
+      {k:'name',label:'Название',type:'text',req:true},
+      {k:'brand',label:'Бренд',type:'text',req:true},
+      {k:'wattage',label:'Мощность (Вт)',type:'number',req:true},
+      {k:'eff',label:'Сертификат',type:'select',ref:'effRatings',req:true},
+      {k:'price',label:'Цена (₸)',type:'number',req:true},
+    ],
+    cols:(p)=>[
+      p.name, p.brand,
+      `${p.wattage} Вт`,
+      `<span class="tag tag-socket">${p.eff}</span>`,
+      `<span class="td-price">${fmt(p.price)}</span>`,
+    ],
+    headers:['Название','Бренд','Мощность','Сертификат','Цена'],
+  },
+  cooler:{
+    label:'Охлаждение',
+    fields:[
+      {k:'name',label:'Название',type:'text',req:true},
+      {k:'brand',label:'Бренд',type:'text',req:true},
+      {k:'type',label:'Тип',type:'select',ref:'coolerTypes',req:true},
+      {k:'tdpSupport',label:'Макс. TDP (Вт)',type:'number',req:true},
+      {k:'sockets',label:'Сокеты (через пробел)',type:'chips',req:true},
+      {k:'price',label:'Цена (₸)',type:'number',req:true},
+    ],
+    cols:(p)=>[
+      p.name, p.brand,
+      p.type==='AIO'?'<span class="tag tag-aio">AIO</span>':'<span class="tag tag-air">Air</span>',
+      `${p.tdpSupport} Вт`,
+      (p.sockets||[]).map(s=>`<span class="tag tag-socket">${s}</span>`).join(' '),
+      `<span class="td-price">${fmt(p.price)}</span>`,
+    ],
+    headers:['Название','Бренд','Тип','Макс. TDP','Сокеты','Цена'],
+  },
+  case:{
+    label:'Корпус',
+    fields:[
+      {k:'name',label:'Название',type:'text',req:true},
+      {k:'brand',label:'Бренд',type:'text',req:true},
+      {k:'formFactors',label:'Форм-факторы (через пробел)',type:'chips',req:true},
+      {k:'maxGpuLen',label:'Макс. длина GPU (мм)',type:'number',req:true},
+      {k:'price',label:'Цена (₸)',type:'number',req:true},
+    ],
+    cols:(p)=>[
+      p.name, p.brand,
+      (p.formFactors||[]).map(f=>`<span class="tag tag-socket">${f}</span>`).join(' '),
+      `${p.maxGpuLen} мм`,
+      `<span class="td-price">${fmt(p.price)}</span>`,
+    ],
+    headers:['Название','Бренд','Форм-факторы','Макс. GPU','Цена'],
+  },
+};
+
+function tierTag(t){
+  const map={high:'tag-high',mid:'tag-mid',low:'tag-low'};
+  const lbl={high:'High',mid:'Mid',low:'Low'};
+  return `<span class="tag ${map[t]||''}">${lbl[t]||t}</span>`;
+}
+function memTag(t){
+  return `<span class="tag ${t==='DDR5'?'tag-ddr5':'tag-ddr4'}">${t}</span>`;
+}
+function storTag(t){
+  const m={NVMe:'tag-nvme',SATA:'tag-sata',HDD:'tag-hdd'};
+  return `<span class="tag ${m[t]||''}">${t}</span>`;
+}
+
+/* ── Parts Page ── */
+let partsFilter = {};
+function renderPartsPage(key){
+  const schema = PART_SCHEMA[key];
+  const data = getPartsData();
+  const items = data[key] || [];
+  const el = document.getElementById('page-'+key);
+  if(!partsFilter[key]) partsFilter[key]={q:''};
+
+  const filtered = items.filter(p => {
+    const q = (partsFilter[key].q||'').toLowerCase();
+    return !q || p.name.toLowerCase().includes(q) || (p.brand||'').toLowerCase().includes(q);
+  });
+
+  el.innerHTML = `
+    <div class="sec-hd">
+      <div>
+        <div class="sec-title">${schema.label}</div>
+        <div class="sec-sub">${items.length} позиций в базе</div>
+      </div>
+      <button class="btn btn-accent" onclick="openPartModal('${key}',null)">+ Добавить</button>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-toolbar">
+        <input class="tbl-search" value="${partsFilter[key].q||''}" placeholder="🔍  Поиск..." oninput="partsFilter['${key}'].q=this.value;renderPartsPage('${key}')">
+        <span style="font-size:12px;color:var(--text3)">${filtered.length} из ${items.length}</span>
+      </div>
+      <table>
+        <thead><tr>${schema.headers.map(h=>`<th>${h}</th>`).join('')}<th>Действия</th></tr></thead>
+        <tbody>${filtered.length ? filtered.map(p=>`
+          <tr>
+            ${schema.cols(p).map((c,i)=>`<td class="${i===0?'td-name':''}">${c}</td>`).join('')}
+            <td><div class="td-actions">
+              <button class="btn btn-ghost btn-icon btn-sm" title="Редактировать" onclick="openPartModal('${key}','${p.id}')">✏️</button>
+              <button class="btn btn-red btn-icon btn-sm" title="Удалить" onclick="deletePart('${key}','${p.id}','${escHtml(p.name)}')">🗑️</button>
+            </div></td>
+          </tr>`).join('') : `<tr><td colspan="${schema.headers.length+1}"><div class="empty-state"><div class="e-ico">📦</div><p>Ничего не найдено</p></div></td></tr>`}
+        </tbody>
+      </table>
+    </div>`;
+
+  // update sidebar count
+  const cntMap = {cpu:'cnt-cpu',motherboard:'cnt-mb',ram:'cnt-ram',gpu:'cnt-gpu',storage:'cnt-storage',psu:'cnt-psu',cooler:'cnt-cooler',case:'cnt-case'};
+  const cntEl = document.getElementById(cntMap[key]);
+  if(cntEl) cntEl.textContent = items.length;
+}
+
+function escHtml(s){ return (s||'').replace(/'/g,"\\'"); }
+
+/* ── Part Modal ── */
+let editingPartKey = null;
+let editingPartId = null;
+let chipValues = {}; // for chips fields
+
+function openPartModal(key, id){
+  editingPartKey = key;
+  editingPartId = id;
+  chipValues = {};
+  const schema = PART_SCHEMA[key];
+  const data = getPartsData();
+  const item = id ? (data[key]||[]).find(p=>p.id===id) : null;
+  const refs = getRefs();
+  document.getElementById('part-modal-title').textContent = id ? `Редактировать: ${item?.name}` : `Добавить ${schema.label}`;
+  document.getElementById('part-err').textContent = '';
+
+  const body = document.getElementById('part-modal-body');
+  const fieldHtml = schema.fields.map(f=>{
+    const val = item ? item[f.k] : '';
+    if(f.type==='select'){
+      const options = (refs[f.ref]||[]).map(o=>`<option value="${o}" ${val===o?'selected':''}>${o}</option>`).join('');
+      return `<div class="fg"><label>${f.label}</label><select class="fi fi-select" id="pf-${f.k}"><option value="">— Выбрать —</option>${options}</select></div>`;
+    }
+    if(f.type==='chips'){
+      const arr = Array.isArray(val) ? val : [];
+      chipValues[f.k] = [...arr];
+      return `<div class="fg" style="grid-column:1/-1"><label>${f.label}</label>
+        <div class="chips-wrap" id="chips-wrap-${f.k}" onclick="document.getElementById('chip-input-${f.k}').focus()">
+          ${arr.map(v=>`<span class="chip">${v}<button class="chip-x" onclick="removeChip('${f.k}','${v}')">×</button></span>`).join('')}
+          <input class="chip-input" id="chip-input-${f.k}" placeholder="Добавить и нажать Enter..." onkeydown="chipKeydown(event,'${f.k}')">
+        </div></div>`;
+    }
+    return `<div class="fg"><label>${f.label}</label><input class="fi" id="pf-${f.k}" type="${f.type}" value="${val||''}" placeholder="${f.label}"></div>`;
+  }).join('');
+
+  body.innerHTML = `<div class="form-grid">${fieldHtml}</div>`;
+  openModal('overlay-part');
+}
+
+function chipKeydown(e, fieldKey){
+  if(e.key==='Enter'||e.key===','||e.key===' '){
+    e.preventDefault();
+    const input = e.target;
+    const val = input.value.trim();
+    if(val && !chipValues[fieldKey].includes(val)){
+      chipValues[fieldKey].push(val);
+      renderChipsWrap(fieldKey);
+    }
+    input.value='';
+  }
+  if(e.key==='Backspace'&&!e.target.value&&chipValues[fieldKey].length){
+    chipValues[fieldKey].pop();
+    renderChipsWrap(fieldKey);
+  }
+}
+
+function removeChip(fieldKey, val){
+  chipValues[fieldKey] = chipValues[fieldKey].filter(v=>v!==val);
+  renderChipsWrap(fieldKey);
+}
+
+function renderChipsWrap(fieldKey){
+  const wrap = document.getElementById('chips-wrap-'+fieldKey);
+  if(!wrap) return;
+  const input = document.getElementById('chip-input-'+fieldKey);
+  wrap.innerHTML = chipValues[fieldKey].map(v=>`<span class="chip">${v}<button class="chip-x" onclick="removeChip('${fieldKey}','${v}')">×</button></span>`).join('');
+  wrap.appendChild(input);
+  input.focus();
+}
+
+function savePart(){
+  const key = editingPartKey;
+  const schema = PART_SCHEMA[key];
+  const data = getPartsData();
+  const err = document.getElementById('part-err');
+  err.textContent = '';
+
+  const obj = {};
+  for(const f of schema.fields){
+    if(f.type==='chips'){
+      obj[f.k] = chipValues[f.k]||[];
+      if(f.req && obj[f.k].length===0){ err.textContent=`${f.label}: обязательно добавьте хотя бы одно значение`; return; }
+    } else {
+      const el = document.getElementById('pf-'+f.k);
+      let v = el?.value?.trim()||'';
+      if(f.req && !v){ err.textContent=`${f.label}: обязательное поле`; el?.focus(); return; }
+      if(f.type==='number') v = v ? Number(v) : 0;
+      obj[f.k] = v;
+    }
+  }
+
+  if(!data[key]) data[key]=[];
+
+  if(editingPartId){
+    const idx = data[key].findIndex(p=>p.id===editingPartId);
+    if(idx!==-1){ data[key][idx] = {...data[key][idx], ...obj}; }
+  } else {
+    obj.id = DB.uid();
+    data[key].push(obj);
+  }
+
+  savePartsData(data);
+  closeModal('overlay-part');
+  renderPartsPage(key);
+  updateSidebarCounts();
+  toast(editingPartId ? 'Изменения сохранены' : 'Комплектующее добавлено','ok');
+}
+
+function deletePart(key, id, name){
+  document.getElementById('dlg-title').textContent = 'Удалить комплектующее?';
+  document.getElementById('dlg-sub').textContent = name;
+  document.getElementById('dlg-icon').textContent = '🗑️';
+  document.getElementById('dlg-ok').onclick = ()=>{
+    const data = getPartsData();
+    data[key] = (data[key]||[]).filter(p=>p.id!==id);
+    savePartsData(data);
+    closeModal('overlay-confirm');
+    renderPartsPage(key);
+    updateSidebarCounts();
+    toast('Удалено','ok');
+  };
+  openModal('overlay-confirm');
+}
+
+/* ── Refs ── */
+function renderRefs(){
+  const refs = getRefs();
+  const container = document.getElementById('refs-container');
+  const labels = {
+    sockets:'Сокеты CPU',
+    memTypes:'Типы памяти',
+    formFactors:'Форм-факторы',
+    coolerTypes:'Типы охлаждения',
+    storageTypes:'Типы накопителей',
+    effRatings:'Сертификаты БП',
+    tiers:'Классы компонентов',
+  };
+
+  container.innerHTML = Object.entries(refs).map(([key,items])=>`
+    <div class="ref-card">
+      <div class="ref-card-hd">
+        <div class="ref-card-title">${labels[key]||key}</div>
+      </div>
+      <div class="ref-items" id="ref-items-${key}">
+        ${items.map(v=>`<div class="ref-item">${v}<button class="del" onclick="deleteRef('${key}','${v}')">×</button></div>`).join('')}
+      </div>
+      <div class="ref-add">
+        <input id="ref-input-${key}" placeholder="Новое значение..." onkeydown="if(event.key==='Enter')addRef('${key}')">
+        <button class="btn btn-ghost btn-sm" onclick="addRef('${key}')">+ Добавить</button>
+      </div>
+    </div>`).join('');
+}
+
+function addRef(key){
+  const input = document.getElementById('ref-input-'+key);
+  const val = input.value.trim();
+  if(!val) return;
+  const refs = getRefs();
+  if(refs[key].includes(val)){ toast('Уже существует','err'); return; }
+  refs[key].push(val);
+  saveRefs(refs);
+  input.value='';
+  renderRefs();
+  toast('Добавлено','ok');
+}
+
+function deleteRef(key, val){
+  const refs = getRefs();
+  refs[key] = refs[key].filter(v=>v!==val);
+  saveRefs(refs);
+  renderRefs();
+  toast('Удалено','ok');
+}
+
+/* ── Users ── */
+function renderUsersTable(){
+  const users = DB.get('users',[]);
+  const configs = DB.get('configs',[]);
+  const reviews = DB.get('reviews',[]);
+  const q = (document.getElementById('users-search')?.value||'').toLowerCase();
+  const filtered = users.filter(u=>!q||u.username?.toLowerCase().includes(q)||u.email?.toLowerCase().includes(q));
+  const tbody = document.getElementById('users-tbody');
+  const empty = document.getElementById('users-empty');
+  document.getElementById('cnt-users').textContent = users.length;
+
+  if(!filtered.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  tbody.innerHTML = filtered.map(u=>{
+    const uc = configs.filter(c=>c.userId===u.id).length;
+    const ur = reviews.filter(r=>r.userId===u.id).length;
+    const since = u.createdAt ? new Date(u.createdAt).toLocaleDateString('ru-RU') : '—';
+    return `<tr>
+      <td><div style="display:flex;align-items:center;gap:10px">
+        <div style="width:32px;height:32px;border-radius:50%;background:var(--vio-dim);border:1px solid rgba(139,92,246,.2);
+          display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--violet)">
+          ${(u.avatar||u.username?.slice(0,2)||'??').toUpperCase()}
+        </div>
+        <span class="td-name">${u.username||'—'}</span>
+      </div></td>
+      <td>${u.email||'—'}</td>
+      <td>${since}</td>
+      <td>${uc}</td>
+      <td>${ur}</td>
+      <td><div class="td-actions">
+        <button class="btn btn-red btn-icon btn-sm" onclick="deleteUser('${u.id}','${escHtml(u.username)}')">🗑️</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function deleteUser(id, name){
+  document.getElementById('dlg-title').textContent = 'Удалить пользователя?';
+  document.getElementById('dlg-sub').textContent = name+' — все данные будут удалены';
+  document.getElementById('dlg-icon').textContent = '👤';
+  document.getElementById('dlg-ok').onclick = ()=>{
+    const users = DB.get('users',[]).filter(u=>u.id!==id);
+    DB.set('users', users);
+    // clear session if it's them
+    const sess = DB.get('session',null);
+    if(sess?.id===id) DB.set('session',null);
+    closeModal('overlay-confirm');
+    renderUsersTable();
+    toast('Пользователь удалён','ok');
+  };
+  openModal('overlay-confirm');
+}
+
+/* ── Reviews ── */
+function renderReviewsTable(){
+  const reviews = DB.get('reviews',[]);
+  const q = (document.getElementById('reviews-search')?.value||'').toLowerCase();
+  const rFilter = document.getElementById('reviews-filter')?.value||'';
+  const cnt = document.getElementById('cnt-reviews');
+  if(cnt) cnt.textContent = reviews.length;
+
+  let filtered = reviews.filter(r=>{
+    if(rFilter && String(r.rating)!==rFilter) return false;
+    if(q && !(r.text||'').toLowerCase().includes(q) && !(r.username||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  const tbody = document.getElementById('reviews-tbody');
+  const empty = document.getElementById('reviews-empty');
+  if(!filtered.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+
+  tbody.innerHTML = filtered.map(r=>{
+    const stars='★'.repeat(r.rating||0)+'☆'.repeat(5-(r.rating||0));
+    const date = r.date ? new Date(r.date).toLocaleDateString('ru-RU') : '—';
+    const text = (r.text||'').slice(0,80)+(r.text?.length>80?'…':'');
+    return `<tr>
+      <td class="td-name">${r.username||'—'}</td>
+      <td style="color:var(--amber);font-size:13px">${stars}</td>
+      <td style="max-width:240px;font-size:12px;color:var(--text2)">${text}</td>
+      <td style="font-size:12px">${r.configName||'—'}</td>
+      <td style="font-size:12px">${date}</td>
+      <td>${r.likes||0} ❤️</td>
+      <td><div class="td-actions">
+        <button class="btn btn-red btn-icon btn-sm" onclick="deleteReview('${r.id}')">🗑️</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function deleteReview(id){
+  document.getElementById('dlg-title').textContent = 'Удалить отзыв?';
+  document.getElementById('dlg-sub').textContent = 'Это действие нельзя отменить';
+  document.getElementById('dlg-icon').textContent = '💬';
+  document.getElementById('dlg-ok').onclick = ()=>{
+    const reviews = DB.get('reviews',[]).filter(r=>r.id!==id);
+    DB.set('reviews', reviews);
+    closeModal('overlay-confirm');
+    renderReviewsTable();
+    toast('Отзыв удалён','ok');
+  };
+  openModal('overlay-confirm');
+}
+
+/* ── Dashboard ── */
+function renderDashboard(){
+  const data = getPartsData();
+  const users = DB.get('users',[]);
+  const reviews = DB.get('reviews',[]);
+  const configs = DB.get('configs',[]);
+  const totalParts = Object.values(data).reduce((s,a)=>s+(a?.length||0),0);
+
+  document.getElementById('dash-cards').innerHTML = `
+    <div class="stat-card accent">
+      <div class="sc-label">Всего комплектующих</div>
+      <div class="sc-num">${totalParts}</div>
+      <div class="sc-sub">В базе данных</div>
+    </div>
+    <div class="stat-card violet">
+      <div class="sc-label">Пользователей</div>
+      <div class="sc-num">${users.length}</div>
+      <div class="sc-sub">Зарегистрировано</div>
+    </div>
+    <div class="stat-card green">
+      <div class="sc-label">Отзывов</div>
+      <div class="sc-num">${reviews.length}</div>
+      <div class="sc-sub">Оставлено</div>
+    </div>
+    <div class="stat-card amber">
+      <div class="sc-label">Сборок</div>
+      <div class="sc-num">${configs.length}</div>
+      <div class="sc-sub">Сохранено</div>
+    </div>`;
+
+  const typeNames={cpu:'Процессоры',motherboard:'Материнки',ram:'ОЗУ',gpu:'Видеокарты',
+    storage:'Накопители',psu:'БП',cooler:'Охлаждение',case:'Корпуса'};
+  const typeIcos={cpu:'🔲',motherboard:'🟦',ram:'📊',gpu:'🎮',storage:'💾',psu:'⚡',cooler:'❄️',case:'🖥️'};
+
+  document.getElementById('dash-parts-breakdown').innerHTML = Object.entries(data).map(([k,v])=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 18px;border-bottom:1px solid var(--border)">
+      <span style="font-size:18px">${typeIcos[k]||'📦'}</span>
+      <span style="flex:1;font-size:13px;color:var(--text)">${typeNames[k]||k}</span>
+      <span style="font-family:var(--fd);font-size:14px;font-weight:700;color:var(--accent)">${v?.length||0}</span>
+    </div>`).join('');
+
+  const recentRevs = [...reviews].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5);
+  document.getElementById('dash-recent-reviews').innerHTML = recentRevs.length
+    ? recentRevs.map(r=>`
+      <div style="padding:10px 18px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+          <span style="font-size:13px;font-weight:600;color:var(--text)">${r.username||'—'}</span>
+          <span style="font-size:12px;color:var(--amber)">${'★'.repeat(r.rating||0)}</span>
+        </div>
+        <div style="font-size:12px;color:var(--text2)">${(r.text||'').slice(0,60)}${(r.text?.length||0)>60?'…':''}</div>
+      </div>`).join('')
+    : '<div class="empty-state"><div class="e-ico">💬</div><p>Отзывов пока нет</p></div>';
+}
+
+/* ── Sidebar counts ── */
+function updateSidebarCounts(){
+  const data = getPartsData();
+  const cntMap = {cpu:'cnt-cpu',motherboard:'cnt-mb',ram:'cnt-ram',gpu:'cnt-gpu',storage:'cnt-storage',psu:'cnt-psu',cooler:'cnt-cooler',case:'cnt-case'};
+  Object.entries(cntMap).forEach(([k,id])=>{
+    const el=document.getElementById(id);
+    if(el) el.textContent=(data[k]||[]).length;
+  });
+  document.getElementById('cnt-users').textContent = DB.get('users',[]).length;
+  document.getElementById('cnt-reviews').textContent = DB.get('reviews',[]).length;
+}
+
+/* ── Overlays close on backdrop click ── */
+document.querySelectorAll('.overlay').forEach(o=>{
+  o.addEventListener('click', e=>{ if(e.target===o) closeModal(o.id); });
+});
+
+/* ── Init ── */
+updateSidebarCounts();
+renderDashboard();
+</script>
+<script src="adminAuth.js"></script>
+</body>
+</html>
